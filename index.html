@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#121212">
+    <meta name="description" content="Coordinate GO - Professional Coordinate & Map Tool">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Coordinate GO">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="google-adsense-account" content="ca-pub-7483666181542764">
     <title>Coordinate GO</title>
 
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%232C2C2E%22/><path d=%22M50 15 L85 85 L50 70 L15 85 Z%22 fill=%22%239C7C3F%22 transform=%22rotate(45 50 50)%22/></svg>">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512x512.png">
 
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7483666181542764" crossorigin="anonymous"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
@@ -39,6 +48,8 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .view-section { display: none; height: 100vh; overflow-y: auto; padding-bottom: 180px; }
     .view-section.active { display: block; }
+    .ad-banner-shell { position: fixed; left: 0; right: 0; bottom: calc(7rem + env(safe-area-inset-bottom)); min-height: 56px; z-index: 45; display: flex; align-items: center; justify-content: center; background: rgba(18,18,18,0.96); border-top: 1px solid rgba(255,255,255,0.08); }
+    .ad-banner-shell .adsbygoogle { width: 100%; min-height: 50px; }
     #map { height: 100%; width: 100%; z-index: 1; }
 
     .leaflet-popup-content-wrapper { background: #1E1E1E; color: white; border-radius: 12px; padding: 0; overflow: hidden; }
@@ -246,6 +257,16 @@
     </div>
 </div>
 
+<!-- AD BANNER -->
+<div id="ad-banner-shell" class="ad-banner-shell" aria-hidden="true">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-7483666181542764"
+         data-ad-slot="2947974060"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+</div>
+
 <!-- BOTTOM NAV -->
 <div class="fixed bottom-0 w-full bg-surface-light dark:bg-surface-elevated border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-28 pb-16 z-50">
     <button onclick="navigateTo('view-home')" class="nav-btn flex flex-col items-center p-2 w-14" data-target="view-home"><span class="material-icons-outlined text-gray-400 text-2xl">home</span><span class="text-[10px] text-gray-400 font-medium" data-i18n="nav_home">Anasayfa</span></button>
@@ -258,6 +279,41 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    (function () {
+        const allowedHosts = ['abdullahsahin.xyz', 'www.abdullahsahin.xyz', 'localhost', '127.0.0.1'];
+        const host = window.location.hostname.toLowerCase();
+        const isAllowedHost = !host || allowedHosts.includes(host) || host.endsWith('.vercel.app');
+        if (window.location.protocol.indexOf('http') === 0 && !isAllowedHost) {
+            document.documentElement.innerHTML = '';
+            throw new Error('Unauthorized host');
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator && window.location.protocol.indexOf('http') === 0) {
+                navigator.serviceWorker.register('sw.js').catch(function () {});
+            }
+        }
+
+        function requestAds() {
+            window.adsbygoogle = window.adsbygoogle || [];
+            document.querySelectorAll('.adsbygoogle').forEach(function () {
+                try { window.adsbygoogle.push({}); } catch (e) {}
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () {
+                registerServiceWorker();
+                requestAds();
+            }, { once: true });
+        } else {
+            registerServiceWorker();
+            requestAds();
+        }
+    })();
+</script>
 
 <script>
     const translations = {
