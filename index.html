@@ -184,6 +184,11 @@
     <button onclick="openKMModal()" class="absolute top-28 right-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white active:scale-95"><span class="material-icons-round text-green-500">trending_up</span><span class="text-xs font-bold">KM'ye Git</span></button>
     <button onclick="toggleLiveInfo()" id="live-info-btn" class="absolute top-[11.5rem] right-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 text-gray-400 active:scale-95 transition-all"><span class="material-icons-round">location_searching</span><span class="text-xs font-bold">Canlı KM</span></button>
     <button onclick="toggleLayerMenu()" class="absolute top-28 left-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white"><span class="material-icons-round text-primary">layers</span><span class="text-xs font-bold" data-i18n="btn_map_type">Harita</span></button>
+    <!-- GPS HASSASİYET GÖSTERGESİ (SahApp'ten alındı) - Harita butonunun altında -->
+    <div id="gps-accuracy-box" class="absolute top-[11.5rem] left-4 z-[500] hidden bg-surface-light dark:bg-surface-elevated px-3 py-2 h-10 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white" style="border-left-width:4px;border-left-color:#9C7C3F;">
+        <span id="gps-accuracy-icon" class="material-icons-round text-base text-primary">gps_not_fixed</span>
+        <span id="gps-accuracy-text" class="text-[11px] font-bold whitespace-nowrap">GPS Aranıyor...</span>
+    </div>
     <button onclick="locateUser()" id="loc-track-btn" class="absolute bottom-48 right-4 z-[500] bg-surface-light dark:bg-surface-elevated w-12 h-12 rounded-full flex items-center justify-center text-primary shadow-xl border border-gray-700 active:scale-90"><span class="material-icons-round text-2xl">my_location</span></button>
     <div id="map" class="bg-[#121212]"></div>
 </section>
@@ -345,14 +350,20 @@
 
     function locateUser() {
         const btn = document.getElementById('loc-track-btn');
+        const gpsBox = document.getElementById('gps-accuracy-box');
         if (watchId !== null) {
             navigator.geolocation.clearWatch(watchId); watchId = null;
             btn.classList.replace('text-primary', 'text-gray-400');
             if (userLocationMarker) { map.removeLayer(userLocationMarker); userLocationMarker = null; }
+            gpsBox.classList.add('hidden'); // takip kapanınca göstergeyi gizle
         } else {
             btn.classList.replace('text-gray-400', 'text-primary');
+            // GPS göstergesini göster ve "aranıyor" durumuna al
+            gpsBox.classList.remove('hidden');
+            updateGPSAccuracy(null);
             watchId = navigator.geolocation.watchPosition((pos) => {
                 const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                updateGPSAccuracy(pos.coords.accuracy); // hassasiyeti göstergeye yaz
                 if (userLocationMarker) {
                     userLocationMarker.setLatLng([lat, lng]);
                     if(isLiveInfoOn) updateLiveKMOffset(lat, lng);
@@ -360,7 +371,32 @@
                     userLocationMarker = L.marker([lat, lng], { icon: L.divIcon({ className: 'user-loc-wrapper', html: '<div class="user-loc-dot"></div>', iconSize:[30,30], iconAnchor:[15,15] }) }).addTo(map);
                 }
                 if(!isLiveInfoOn) map.flyTo([lat, lng], map.getZoom() < 14 ? 16 : map.getZoom());
-            }, () => showCustomAlert("Hata", "Konum alınamadı."), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            }, () => { showCustomAlert("Hata", "Konum alınamadı."); updateGPSAccuracy('error'); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        }
+    }
+
+    // GPS hassasiyet göstergesini günceller (SahApp mantığı)
+    // null = aranıyor, 'error' = bulunamadı, sayı = ± metre hassasiyet
+    function updateGPSAccuracy(accuracy) {
+        const box = document.getElementById('gps-accuracy-box');
+        const icon = document.getElementById('gps-accuracy-icon');
+        const text = document.getElementById('gps-accuracy-text');
+        if (accuracy === null) {
+            icon.innerText = 'gps_not_fixed'; icon.className = 'material-icons-round text-base text-gray-400';
+            text.innerText = 'GPS Aranıyor...';
+            box.style.borderLeftColor = '#9C7C3F';
+        } else if (accuracy === 'error') {
+            icon.innerText = 'gps_off'; icon.className = 'material-icons-round text-base text-red-500';
+            text.innerText = 'GPS Yok';
+            box.style.borderLeftColor = '#e74c3c';
+        } else if (accuracy > 20) {
+            icon.innerText = 'gps_not_fixed'; icon.className = 'material-icons-round text-base text-red-500';
+            text.innerText = 'Zayıf GPS: ± ' + accuracy.toFixed(0) + 'm';
+            box.style.borderLeftColor = '#e74c3c';
+        } else {
+            icon.innerText = 'gps_fixed'; icon.className = 'material-icons-round text-base text-green-500';
+            text.innerText = 'GPS: ± ' + accuracy.toFixed(1) + 'm';
+            box.style.borderLeftColor = '#27ae60';
         }
     }
 
