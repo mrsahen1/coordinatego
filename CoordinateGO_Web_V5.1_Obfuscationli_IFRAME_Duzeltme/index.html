@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Coordinate GO</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%232C2C2E%22/><path d=%22M50 15 L85 85 L50 70 L15 85 Z%22 fill=%22%239C7C3F%22 transform=%22rotate(45 50 50)%22/></svg>">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <script src="assets-obfuscated/inline-1.js"></script>
+    <style>
+        body { min-height: 100dvh; overscroll-behavior: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .view-section { display: none; height: 100vh; overflow-y: auto; padding-bottom: 180px; }
+        .view-section.active { display: block; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+
+        .leaflet-popup-content-wrapper { background: #1E1E1E; color: white; border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 10px; width: auto !important; }
+        .leaflet-control-zoom { display: none !important; }
+
+        .my-label { background: transparent !important; border: none !important; box-shadow: none !important; color: #fff; font-weight: bold; font-size: 11px; text-shadow: 2px 2px 2px #000; margin-top: -35px !important; white-space: nowrap; pointer-events: none; }
+        .km-label-xml { background: transparent !important; border: none !important; box-shadow: none !important; color: #ffffff !important; font-weight: 900 !important; font-size: 12px !important; text-shadow: 2px 2px 3px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000 !important; white-space: nowrap !important; }
+
+        .live-info-label { background: rgba(0,0,0,0.85) !important; border: 1.5px solid #9C7C3F !important; color: #fff !important; font-size: 10px !important; font-weight: 800 !important; padding: 5px 10px !important; border-radius: 8px !important; white-space: nowrap !important; margin-top: -45px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+
+        .zoomed-out .my-label, .zoomed-out .km-label-xml { display: none !important; }
+
+        .user-loc-wrapper { position: relative; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .user-loc-dot { width: 18px; height: 18px; background: #4285F4; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 12px rgba(66,133,244,1); }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display antialiased overflow-hidden">
+
+<div id="lang-switcher" class="absolute top-10 right-5 z-50 flex gap-3">
+    <button onclick="changeLanguage('en')" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a73e8]/10 border border-[#1a73e8] rounded-full active:scale-95 backdrop-blur-md"><span class="material-icons-round text-sm text-[#1a73e8]">public</span><span class="text-[10px] font-bold text-[#1a73e8]">ENG</span></button>
+    <button onclick="changeLanguage('tr')" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#E30A17] border border-[#E30A17] rounded-full shadow-lg transition-transform active:scale-95 backdrop-blur-md"><span class="material-icons-round text-sm text-white">star</span><span class="text-[10px] font-bold text-white">TR</span></button>
+</div>
+
+<!-- HOME DASHBOARD -->
+<section id="view-home" class="view-section active pt-32">
+    <div class="px-5 max-w-md mx-auto">
+        <header class="flex items-center justify-center gap-4 mb-10 mt-20">
+            <div class="w-16 h-16 bg-surface-elevated rounded-full flex items-center justify-center shadow-lg border border-gray-700"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(45deg);"><path d="M12 2L19 21L12 17L5 21L12 2Z" fill="#9C7C3F" stroke="#9C7C3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><h1 class="text-3xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">Coordinate <span class="text-primary">GO</span></h1><p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Created By Sahin V5.1</p></div>
+        </header>
+        <div class="space-y-4">
+            <button onclick="navigateTo('view-entry')" class="w-full bg-surface-light dark:bg-surface-elevated p-6 rounded-2xl shadow-sm text-left flex items-center gap-4 active:scale-[0.98] border border-gray-100 dark:border-gray-800 group"><div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0"><span class="material-icons-round text-2xl">calculate</span></div><div><h3 class="font-bold text-lg" data-i18n="home_converter_title">Koordinat Çevirici</h3><p class="text-xs text-gray-500 mt-1" data-i18n="home_converter_desc">ITRF (DOM) & UTM'den WGS84'e</p></div><span class="material-icons-round text-gray-300 ml-auto">chevron_right</span></button>
+            <button onclick="navigateTo('view-xml')" class="w-full bg-surface-light dark:bg-surface-elevated p-6 rounded-2xl shadow-sm text-left flex items-center gap-4 active:scale-[0.98] border border-gray-100 dark:border-gray-800 group"><div class="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 shrink-0"><span class="material-icons-round text-2xl">architecture</span></div><div><h3 class="font-bold text-lg" data-i18n="home_xml_title">XML Güzergah</h3><p class="text-xs text-gray-500 mt-1" data-i18n="home_xml_desc">LandXML Projelerini Yönet</p></div><span class="material-icons-round text-gray-300 ml-auto">chevron_right</span></button>
+            <button onclick="navigateTo('view-files')" class="w-full bg-surface-light dark:bg-surface-elevated p-6 rounded-2xl shadow-sm text-left flex items-center gap-4 active:scale-[0.98] border border-gray-100 dark:border-gray-800 group"><div class="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0"><span class="material-icons-round text-2xl">folder_shared</span></div><div><h3 class="font-bold text-lg" data-i18n="home_files_title">Proje Dosyaları</h3><p class="text-xs text-gray-500 mt-1" data-i18n="home_files_desc">KML ve TXT Dosyalarını Yönet</p></div><span class="material-icons-round text-gray-300 ml-auto">chevron_right</span></button>
+            <button onclick="navigateTo('view-saha')" class="w-full bg-surface-light dark:bg-surface-elevated p-6 rounded-2xl shadow-sm text-left flex items-center gap-4 active:scale-[0.98] border border-gray-100 dark:border-gray-800 group"><div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0"><span class="material-icons-round text-2xl">explore</span></div><div><h3 class="font-bold text-lg" data-i18n="home_saha_title">Saha</h3><p class="text-xs text-gray-500 mt-1" data-i18n="home_saha_desc">Nokta, Alan, Çizgi Çiz & WhatsApp'den Paylaş</p></div><span class="material-icons-round text-gray-300 ml-auto">chevron_right</span></button>
+            <div class="pt-6 text-center opacity-60"><p class="text-[10px] font-bold tracking-widest text-gray-500 dark:text-gray-400 uppercase">© 2026 COORDINATE GO · TÜM HAKLARI SAKLIDIR</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- XML VIEW -->
+<section id="view-xml" class="view-section pt-12">
+    <div class="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur sticky top-0 z-10"><button onclick="navigateTo('view-home')" class="flex items-center text-primary font-medium"><span class="material-icons-round text-xl mr-1">arrow_back_ios</span> <span data-i18n="nav_home">Anasayfa</span></button><h1 class="font-semibold text-sm uppercase tracking-wide">XML PROJE</h1><div class="w-12"></div></div>
+    <div class="p-5 space-y-6 max-w-md mx-auto">
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-6 border-2 border-dashed border-primary/30 text-center"><input type="file" id="xml-only-input" class="hidden" accept=".xml" onchange="handleXMLOnlySelect(this)"><label for="xml-only-input" class="cursor-pointer"><span class="material-icons-round text-5xl text-primary mb-2">upload_file</span><h3 class="text-sm font-bold" data-i18n="lbl_import_xml">LandXML Dosyası Seç</h3><p class="text-[10px] text-gray-500 mt-1 italic" data-i18n="desc_xml_only">Güzergah çizgisini ve KM etiketlerini oluşturur</p></label></div>
+        <div id="xml-project-list" class="space-y-3"></div>
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 border border-gray-100 dark:border-gray-800 shadow-sm"><div class="flex items-center gap-2 mb-3"><span class="material-icons-round text-primary text-xl">help_outline</span><h3 class="text-sm font-bold text-gray-900 dark:text-white" data-i18n="info_xml_title">Güzergah Dosyası Hakkında</h3></div><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="info_xml_desc">Bu bölüm AutoCAD'den dışa aktarılan LandXML (.xml) güzergah dosyalarını harita üzerinde pürüzsüz bir çizgi ve her 500 metrede bir kilometre (KM) etiketiyle görüntülemenizi sağlar. Ayrıca sağ üstteki butonlarla hedef bir KM'ye navigasyon yapabilir veya canlı konumunuzun güzergaha olan dik mesafesini (Ofset) görebilirsiniz.</p></div>
+    </div>
+</section>
+
+<!-- MANUAL ENTRY VIEW -->
+<section id="view-entry" class="view-section pt-12">
+    <div class="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur sticky top-0 z-10"><button onclick="navigateTo('view-home')" class="flex items-center text-primary font-medium"><span class="material-icons-round text-xl mr-1">arrow_back_ios</span> <span data-i18n="nav_home">Anasayfa</span></button><h1 class="font-semibold text-sm uppercase tracking-wide">DÖNÜŞTÜRÜCÜ</h1><button onclick="clearInputs()" class="text-sm text-primary font-bold">Temizle</button></div>
+    <div class="p-5 space-y-6 max-w-md mx-auto">
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-800 space-y-5">
+            <div>
+                <label class="text-[10px] font-bold uppercase text-primary tracking-wider mb-1 block" data-i18n="lbl_zone">Sistem / Dilim</label>
+                <!-- Hidden select for form compatibility -->
+                <select id="input-zone" class="hidden">
+                    <option value="dom27">DOM 27 (Canakkale/Izmir)</option>
+                    <option value="dom30" selected>DOM 30 (Antalya/Istanbul)</option>
+                    <option value="dom33">DOM 33 (Ankara/Konya)</option>
+                    <option value="dom36">DOM 36 (Adana/Kayseri)</option>
+                    <option value="dom39">DOM 39 (Trabzon/Erzincan)</option>
+                    <option value="dom42">DOM 42 (Van/Erzurum)</option>
+                    <option value="dom45">DOM 45 (Igdir)</option>
+                    <option value="utm35">Zone 35 (West)</option>
+                    <option value="utm36">Zone 36 (Central)</option>
+                    <option value="utm37">Zone 37 (East)</option>
+                    <option value="utm38">Zone 38 (Far East)</option>
+                    <option value="mkd21">MGI Zone 7 (Bessel - CM 21)</option>
+                </select>
+                <!-- Modern zone picker button -->
+                <button type="button" id="zone-picker-btn" onclick="openZoneModal()" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 text-sm font-medium active:scale-[0.98] transition-transform">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                            <span class="material-icons-round text-primary text-base">explore</span>
+                        </div>
+                        <span id="zone-picker-label" class="text-gray-900 dark:text-white font-semibold">DOM 30 (Antalya/Istanbul)</span>
+                    </div>
+                    <span class="material-icons-round text-gray-400 text-xl">expand_more</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-4"><div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sağa Değer (Y)</label><input id="input-easting" type="number" step="0.01" placeholder="657613.56" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div><div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Yukarı Değer (X)</label><input id="input-northing" type="number" step="0.01" placeholder="4060659.68" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div></div>
+            <button onclick="calculateCoordinates()" class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"><span class="material-icons-round">explore</span><span data-i18n="btn_calc_show">Hesapla & Göster</span></button>
+        </div>
+        <div id="calc-result" class="hidden bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 border border-gray-100 dark:border-gray-800 animate-fade-in">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2"><h3 class="text-xs uppercase text-green-500 font-bold" data-i18n="lbl_wgs84_res">WGS84 Sonucu</h3><span class="material-icons text-green-500 text-sm">check_circle</span></div>
+            <div class="grid grid-cols-2 gap-4 text-center mb-4">
+                <div class="bg-background-light dark:bg-black/20 p-2 rounded-lg relative group" onclick="copyToClipboard(document.getElementById('res-lat').innerText)">
+                    <span class="block text-[10px] text-gray-400 uppercase">Enlem</span>
+                    <span id="res-lat" class="text-base font-mono font-bold select-all">--</span>
+                    <span class="material-icons-round text-[12px] absolute top-1 right-1 text-primary opacity-50">content_copy</span>
+                </div>
+                <div class="bg-background-light dark:bg-black/20 p-2 rounded-lg relative group" onclick="copyToClipboard(document.getElementById('res-lng').innerText)">
+                    <span class="block text-[10px] text-gray-400 uppercase">Boylam</span>
+                    <span id="res-lng" class="text-base font-mono font-bold select-all">--</span>
+                    <span class="material-icons-round text-[12px] absolute top-1 right-1 text-primary opacity-50">content_copy</span>
+                </div>
+            </div>
+            <div class="flex gap-2"><button onclick="openExternalMap('google')" class="flex-1 bg-white dark:bg-[#3a3a3c] py-3 rounded-xl text-xs font-bold">G Maps</button><button onclick="openExternalMap('yandex')" class="flex-1 bg-white dark:bg-[#3a3a3c] py-3 rounded-xl text-xs font-bold">Y Navi</button><button onclick="openCalculatedOnMap()" class="flex-1 bg-primary text-white py-3 rounded-xl text-xs font-bold" data-i18n="btn_app_map">Harita</button></div>
+        </div>
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 border border-gray-100 dark:border-gray-800 mt-6"><div class="flex items-center gap-2 mb-3"><span class="material-icons-round text-primary text-xl">help_outline</span><h3 class="text-sm font-bold text-gray-900 dark:text-white" data-i18n="info_calc_title">Sistem Seçimi Nasıl Yapılır?</h3></div><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="info_calc_desc">Koordinat dönüştürücüyü kullanırken bulunduğunuz bölgenin DOM veya UTM değerini doğru seçmelisiniz. Bu sistem, yerel projeksiyonlu (ITRF/ED50) koordinatlarınızı evrensel WGS84 formatına yüksek hassasiyetle dönüştürür.</p></div>
+
+        <!-- ═══════════════════════════════════════════════════════════
+             EPSG KOORDİNAT DÖNÜŞTÜRÜCÜ (V4.2 - EKLENDİ)
+             Yukarıdaki DOM/UTM Dönüştürücü'ye HİÇ dokunulmadı, bu tamamen
+             ayrı ve bağımsız bir kart. 30+ EPSG referans sistemi arasında
+             genel amaçlı dönüşüm yapar (kaynak → hedef sistem seçimi).
+        ═══════════════════════════════════════════════════════════════ -->
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-800 space-y-5 mt-6">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-icons-round text-primary text-xl">swap_horiz</span>
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white">EPSG Koordinat Dönüştürücü</h3>
+                </div>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400">30+ koordinat referans sistemi arasında dönüşüm yapın.</p>
+            </div>
+
+            <!-- KAYNAK SİSTEM -->
+            <div>
+                <label class="text-[10px] font-bold uppercase text-primary tracking-wider mb-1 block">Kaynak Sistem</label>
+                <button type="button" onclick="openEpsgPicker('from')" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none text-sm font-medium text-left flex items-center justify-between gap-2 text-gray-900 dark:text-white">
+                    <span id="epsg-from-label" class="truncate">EPSG:4326 - WGS 84 (Coğrafi - Enlem/Boylam)</span>
+                    <span class="material-icons-round text-gray-400 shrink-0">expand_more</span>
+                </button>
+                <input type="hidden" id="epsg-from" value="EPSG:4326">
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sağa / Boylam (X)</label><input id="epsg-input-x" type="number" step="any" inputmode="decimal" placeholder="ör. 35.500000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Yukarı / Enlem (Y)</label><input id="epsg-input-y" type="number" step="any" inputmode="decimal" placeholder="ör. 39.000000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
+                </div>
+            </div>
+
+            <!-- HEDEF SİSTEM -->
+            <div>
+                <label class="text-[10px] font-bold uppercase text-primary tracking-wider mb-1 block">Hedef Sistem</label>
+                <button type="button" onclick="openEpsgPicker('to')" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none text-sm font-medium text-left flex items-center justify-between gap-2 text-gray-900 dark:text-white">
+                    <span id="epsg-to-label" class="truncate">EPSG:5254 - TUREF/TM30 (Türkiye 3°)</span>
+                    <span class="material-icons-round text-gray-400 shrink-0">expand_more</span>
+                </button>
+                <input type="hidden" id="epsg-to" value="EPSG:5254">
+                <div class="grid grid-cols-2 gap-3 mt-3">
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sonuç (X)</label><input id="epsg-output-x" type="text" readonly placeholder="—" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm text-green-500 font-bold"></div>
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sonuç (Y)</label><input id="epsg-output-y" type="text" readonly placeholder="—" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm text-green-500 font-bold"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="epsgConvert()" class="flex-1 bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"><span class="material-icons-round text-lg">swap_horiz</span>Dönüştür</button>
+                <button onclick="copyEpsgResult()" type="button" class="bg-gray-100 dark:bg-[#3a3a3c] text-gray-900 dark:text-white font-bold py-3.5 px-5 rounded-xl active:scale-[0.98] flex items-center justify-center"><span class="material-icons-round text-lg">content_copy</span></button>
+            </div>
+            <div id="epsg-result-msg" class="hidden text-center text-xs font-bold text-green-500">✓ Dönüşüm başarılı!</div>
+        </div>
+
+        <!-- KÜBAJ: Hesap ekranına eklenen tek giriş. Motor ve arayüz assets/cubage altında tamamen bağımsızdır. -->
+        <button onclick="navigateTo('view-cubage')" type="button" class="w-full bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-800 mt-6 text-left flex items-center gap-4 active:scale-[0.99]">
+            <span class="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><span class="material-icons-round text-2xl">view_in_ar</span></span>
+            <span class="flex-1 min-w-0">
+                <span class="block text-[10px] font-bold uppercase text-primary tracking-wider">HACİM HESABI</span>
+                <strong class="block text-base text-gray-900 dark:text-white mt-1">Kübaj</strong>
+                <small class="block text-[11px] text-gray-500 dark:text-gray-400 mt-1">LandXML yüzeyini Saha DEM kotlarıyla karşılaştır; kazı ve dolgu m³ hesapla.</small>
+            </span>
+            <span class="material-icons-round text-gray-400">chevron_right</span>
+        </button>
+        <!-- KAZI-DOLGU: iki LandXML TIN yüzeyini karşılaştıran, Kübaj'dan ayrı modül. -->
+        <button onclick="navigateTo('view-volume')" type="button" class="w-full bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-800 mt-4 text-left flex items-center gap-4 active:scale-[0.99]">
+            <div class="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><span class="material-icons-round">compare</span></div>
+            <div><span class="text-xs text-gray-500 dark:text-gray-400">İki yüzey karşılaştırması</span><strong class="block text-base text-gray-900 dark:text-white mt-1">Kazı-Dolgu Hesapla</strong><p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Alt taban ve üst taban TIN yüzeyleri arasında m³ hesapla</p></div>
+        </button>
+    </div>
+</section>
+
+<!-- EPSG SİSTEM SEÇİCİ MODAL (native select yerine — okunabilir/kontrast özel bileşen) -->
+<div id="epsg-modal-backdrop" class="fixed inset-0 bg-black/60 z-[900] hidden" onclick="closeEpsgPicker()"></div>
+<div id="epsg-modal" class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-[#1C1C1E] z-[901] rounded-t-2xl transform translate-y-full transition-transform duration-300 max-h-[75vh] overflow-hidden flex flex-col border-t border-gray-200 dark:border-gray-700">
+    <div class="w-full flex justify-center pt-3 pb-1 shrink-0"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div>
+    <div class="px-6 py-3 shrink-0 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+        <h3 id="epsg-modal-title" class="text-base font-bold text-gray-900 dark:text-white">Sistem Seç</h3>
+        <button onclick="closeEpsgPicker()" class="text-primary font-bold text-sm">Kapat</button>
+    </div>
+    <div id="epsg-modal-list" class="p-4 overflow-y-auto space-y-4"></div>
+</div>
+
+<!-- PROJECT FILES VIEW -->
+<section id="view-files" class="view-section pt-12">
+    <div class="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur sticky top-0 z-20"><button onclick="navigateTo('view-home')" class="flex items-center text-primary font-medium"><span class="material-icons-round text-xl mr-1">arrow_back_ios</span> <span data-i18n="nav_home">Anasayfa</span></button><h1 class="font-semibold text-sm uppercase tracking-wide">Proje Yöneticisi</h1><div class="w-12"></div></div>
+    <div class="p-4 space-y-4">
+        <input type="file" id="kml-input" class="hidden" accept=".kml,.xml,.kmz" onchange="handleFileSelect(this, 'kml')"><input type="file" id="txt-input" class="hidden" accept=".txt,text/plain" onchange="handleFileSelect(this, 'txt')">
+        <div onclick="document.getElementById('kml-input').click()" class="relative w-full h-24 rounded-2xl bg-surface-light dark:bg-surface-elevated border flex items-center px-6 gap-4 active:scale-[0.99] cursor-pointer"><div class="w-12 h-12 flex items-center justify-center shrink-0"><svg viewBox="0 0 48 48" class="w-12 h-12"><circle cx="24" cy="24" r="22" fill="#1a73e8"/><path d="M37 13c-2-2-5-3-5-3s-2 2-4 2-3-2-5-2-4 1-5 4c0 0 2 3 2 5s-2 4-2 6c0 0-4 0-5 2s-1 4 1 5 4 1 6 0 3-3 5-4 4-2 6-4 2-4 3-7 0-3-1-4z" fill="#34a853" opacity="0.9"/></svg></div><div><span class="block text-sm font-bold text-gray-900 dark:text-white" data-i18n="btn_import_kml">KML / KMZ Yükle</span><span class="text-[10px] text-gray-500" data-i18n="desc_kml">Google Earth Dosyaları</span></div></div>
+        <div onclick="document.getElementById('txt-input').click()" class="relative w-full h-24 rounded-2xl bg-surface-light dark:bg-surface-elevated border flex items-center px-6 gap-4 active:scale-[0.99] cursor-pointer"><div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center shrink-0"><span class="material-icons-round text-white text-2xl">description</span></div><div><span class="block text-sm font-bold text-gray-900 dark:text-white" data-i18n="btn_import_txt">TXT Dosyası Yükle</span><span class="text-[10px] text-gray-500" data-i18n="desc_txt">Koordinat Listeleri (No Y X Z)</span></div></div>
+        <div class="flex justify-between items-center pt-2 px-1"><h3 class="text-xs font-bold text-gray-500 uppercase" data-i18n="lbl_projects">PROJELERİNİZ</h3><span id="project-count-badge" class="text-[10px] bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">0</span></div>
+        <div id="no-files-msg" class="text-center text-gray-500 text-sm py-8 italic" data-i18n="msg_no_files">Henüz dosya yüklenmedi.</div>
+        <div id="file-list-container" class="space-y-3"></div>
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 border border-gray-100 dark:border-gray-800 mt-6 pb-24"><div class="flex items-center gap-2 mb-3"><span class="material-icons-round text-blue-500 text-xl">security</span><h3 class="text-sm font-bold text-gray-900 dark:text-white" data-i18n="info_files_title">Dosya Saklama Sistemi Hakkında</h3></div><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="info_files_desc">Yüklediğiniz KML, KMZ ve TXT dosyaları hiçbir uzak sunucuya gönderilmez. Tüm veriler yalnızca kendi cihazınızın tarayıcı önbelleğinde (Local Storage) işlenir ve barındırılır.</p></div>
+    </div>
+</section>
+
+<!-- LEGAL VIEW -->
+<section id="view-legal" class="view-section pt-12">
+    <div class="px-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur sticky top-0 z-10"><button onclick="navigateTo('view-home')" class="flex items-center text-primary font-medium"><span class="material-icons-round text-xl mr-1">arrow_back_ios</span> <span data-i18n="nav_home">Anasayfa</span></button><h1 class="font-semibold text-sm uppercase tracking-wide">Yasal Bilgilendirme</h1><div class="w-12"></div></div>
+    <div class="p-5 space-y-6 max-w-md mx-auto pb-32">
+        <div class="bg-surface-light dark:bg-surface-elevated rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 space-y-6">
+            <div><h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><span class="material-icons-round text-primary text-sm">privacy_tip</span> <span data-i18n="legal_privacy_title">Gizlilik Politikası (Privacy Policy)</span></h3><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="legal_privacy_desc">Coordinate GO, kullanıcıların kişisel verilerini veya yükledikleri proje dosyalarını hiçbir şekilde uzak sunucularda toplamaz, işlemez veya üçüncü şahıslarla paylaşmaz. Tüm veri işleme süreçleri doğrudan kullanıcının cihazında, tarayıcı tabanlı gerçekleşir. Konum izniniz yalnızca haritada sizi göstermek için anlık olarak kullanılır, kayıt altına alınmaz.</p></div>
+            <div><h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><span class="material-icons-round text-primary text-sm">gavel</span> <span data-i18n="legal_terms_title">Kullanım Koşulları (Terms of Service)</span></h3><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="legal_terms_desc">Uygulamamızdaki dönüştürme algoritmaları ve harita gösterimleri yüksek hassasiyetle çalışacak şekilde tasarlanmış olsa da, yasal sınır belirleme veya resmi kadastro işlemlerinde kullanılmak üzere resmi belge niteliği taşımaz. Kullanıcı, uygulamanın ürettiği sonuçların doğruluğunu saha koşullarında teyit etmekle yükümlüdür.</p></div>
+            <div><h3 class="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><span class="material-icons-round text-primary text-sm">cookie</span> <span data-i18n="legal_cookie_title">Çerez Politikası (Cookie Policy)</span></h3><p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed" data-i18n="legal_cookie_desc">Sitemiz, size daha iyi bir deneyim sunmak için zorunlu çerezleri ve tarayıcı depolama alanını (Local Storage) kullanır. Bu alan dil tercihlerinizi ve yüklediğiniz projeleri cihazınızda tutmak için kullanılabilir.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- FILE DETAILS VIEW -->
+<section id="view-file-details" class="view-section pt-0">
+    <div class="bg-background-light/95 dark:bg-background-dark/95 backdrop-blur sticky top-0 z-30 pb-2 pt-12 px-4 border-b border-gray-200 dark:border-gray-800 shadow-sm"><div class="flex items-center justify-between mb-3"><button onclick="navigateTo('view-files')" class="flex items-center text-primary font-medium"><span class="material-icons-round text-xl mr-1">arrow_back_ios</span> <span data-i18n="nav_files">Dosyalar</span></button><h1 id="current-filename" class="font-bold text-sm truncate max-w-[150px]">Filename</h1><div class="w-12"></div></div><input type="text" id="search-input" onkeyup="filterList()" placeholder="Nokta ara..." class="block w-full px-3 py-2.5 rounded-xl text-sm bg-white dark:bg-surface-elevated text-gray-900 dark:text-white border-none shadow-sm focus:ring-2 focus:ring-primary"></div>
+    <div class="px-4 py-2 text-[10px] font-bold text-gray-500 uppercase flex justify-between"><span data-i18n="lbl_points">Noktalar</span><span id="point-count">0 Items</span></div><div id="kml-list-container" class="divide-y divide-gray-200 dark:divide-gray-800 pb-24"></div>
+</section>
+
+<!-- MAP VIEW -->
+<section id="view-map" class="view-section h-screen p-0 pb-0">
+    <button onclick="toggleMapFileMenu()" class="absolute top-14 left-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white"><span class="material-icons-round text-primary">folder</span><span class="text-xs font-bold" data-i18n="nav_files">Dosyalar</span></button>
+    <button onclick="clearMapVisuals()" class="absolute top-14 right-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white"><span class="material-icons-round text-red-500">delete</span><span class="text-xs font-bold" data-i18n="btn_clear">Temizle</span></button>
+    <button onclick="openKMModal()" class="absolute top-28 right-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white active:scale-95"><span class="material-icons-round text-green-500">trending_up</span><span class="text-xs font-bold">KM'ye Git</span></button>
+    <button onclick="toggleLiveInfo()" id="live-info-btn" class="absolute top-[11.5rem] right-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 text-gray-400 active:scale-95 transition-all"><span class="material-icons-round">location_searching</span><span class="text-xs font-bold">Canlı KM</span></button>
+    <button onclick="toggleLayerMenu()" class="absolute top-28 left-4 z-[500] bg-surface-light dark:bg-surface-elevated px-4 py-2 h-12 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white"><span class="material-icons-round text-primary">layers</span><span class="text-xs font-bold" data-i18n="btn_map_type">Harita</span></button>
+    <!-- GPS HASSASİYET GÖSTERGESİ (SahApp'ten alındı) - Harita butonunun altında -->
+    <div id="gps-accuracy-box" class="absolute top-[11.5rem] left-4 z-[500] hidden bg-surface-light dark:bg-surface-elevated px-3 py-2 h-10 rounded-xl shadow-xl flex items-center gap-2 border border-gray-700 dark:text-white" style="border-left-width:4px;border-left-color:#9C7C3F;">
+        <span id="gps-accuracy-icon" class="material-icons-round text-base text-primary">gps_not_fixed</span>
+        <span id="gps-accuracy-text" class="text-[11px] font-bold whitespace-nowrap">GPS Aranıyor...</span>
+    </div>
+    <button onclick="locateUser()" id="loc-track-btn" class="absolute bottom-48 right-4 z-[500] bg-surface-light dark:bg-surface-elevated w-12 h-12 rounded-full flex items-center justify-center text-primary shadow-xl border border-gray-700 active:scale-90"><span class="material-icons-round text-2xl">my_location</span></button>
+    <div id="map" class="bg-[#121212]"></div>
+</section>
+
+<!-- MODALS -->
+<div id="custom-alert-backdrop" class="fixed inset-0 bg-black/80 z-[2000] hidden flex items-center justify-center p-6 backdrop-blur-sm">
+    <div class="bg-surface-elevated rounded-2xl w-full max-w-xs p-6 border border-gray-700 text-center shadow-2xl">
+        <div id="alert-icon" class="mb-4 text-primary"><span class="material-icons-round text-5xl">info</span></div>
+        <h3 id="alert-title" class="text-lg font-bold text-white mb-2">Başlık</h3>
+        <p id="alert-message" class="text-sm text-gray-400 mb-6 font-medium">Mesaj.</p>
+        <button id="alert-btn-ok" class="w-full py-3.5 bg-primary text-white rounded-xl font-bold active:scale-95">TAMAM</button>
+    </div>
+</div>
+
+<div id="km-modal-backdrop" class="fixed inset-0 bg-black/70 z-[1000] hidden flex items-center justify-center p-6 backdrop-blur-md">
+    <div class="bg-surface-elevated rounded-3xl w-full max-w-xs shadow-2xl p-6 border border-gray-700"><h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><span class="material-icons-round text-green-500">flag</span> KM Navigasyon</h3><p class="text-xs text-gray-400 mb-4">Gitmek istediğiniz hedef KM'yi giriniz.</p><input id="km-input-field" type="text" placeholder="Örn: 1250 veya 1+250" class="w-full bg-black/40 border border-gray-600 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:ring-2 focus:ring-primary font-mono"><div class="flex gap-3"><button onclick="closeKMModal()" class="flex-1 py-3 bg-gray-700 text-white rounded-xl font-bold text-xs">İPTAL</button><button onclick="executeGoToKM()" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold text-xs">GİT</button></div></div>
+</div>
+
+<div id="layer-modal-backdrop" class="fixed inset-0 bg-black/60 z-[900] hidden" onclick="toggleLayerMenu()"></div>
+<div id="layer-modal" class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-[#1C1C1E] z-[901] rounded-t-2xl transform translate-y-full transition-transform duration-300 p-6 border-t border-gray-200 dark:border-gray-700">
+    <div class="w-full flex justify-center pb-1"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div>
+    <div class="p-6 text-center"><h3 class="text-lg font-bold mb-6 dark:text-white" data-i18n="lbl_select_map">Harita Türü Seç</h3><div class="grid grid-cols-3 gap-4"><button onclick="applyLayer('street')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-500 shadow-sm"><span class="material-icons-round text-3xl">map</span></div><span class="text-[11px] font-bold dark:text-gray-100" data-i18n="map_street">Sokak</span></button><button onclick="applyLayer('hybrid')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 bg-green-500/20 rounded-2xl flex items-center justify-center text-green-500 shadow-sm"><span class="material-icons-round text-3xl">satellite</span></div><span class="text-[11px] font-bold dark:text-gray-100" data-i18n="map_sat">Uydu</span></button><button onclick="applyLayer('leaflet')" class="flex flex-col items-center gap-2"><div class="w-14 h-14 bg-teal-500/20 rounded-2xl flex items-center justify-center text-teal-400 shadow-sm"><span class="material-icons-round text-3xl">terrain</span></div><span class="text-[11px] font-bold dark:text-gray-100">Leaflet</span></button></div></div>
+</div>
+
+<div id="map-file-modal-backdrop" class="fixed inset-0 bg-black/60 z-[900] hidden" onclick="toggleMapFileMenu()"></div>
+<div id="map-file-modal" class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-[#1C1C1E] z-[901] rounded-t-2xl transform translate-y-full transition-transform duration-300 pb-8 border-t border-gray-200 dark:border-gray-700 max-h-[70vh] overflow-hidden flex flex-col"><div class="w-full flex justify-center pt-3 pb-1 shrink-0"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div><div class="px-6 py-4 shrink-0 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center"><h3 class="text-lg font-bold text-gray-900 dark:text-white" data-i18n="lbl_select_project">Katman Seç</h3><button onclick="toggleMapFileMenu()" class="text-primary font-bold text-sm" data-i18n="btn_close">Kapat</button></div><div id="map-file-list" class="p-4 overflow-y-auto space-y-3"></div></div>
+
+<div id="nav-modal-backdrop" class="fixed inset-0 bg-black/60 z-[900] hidden" onclick="closeNavModal()"></div>
+<div id="nav-modal" class="fixed bottom-0 left-0 right-0 bg-surface-light dark:bg-[#1C1C1E] z-[901] rounded-t-2xl transform translate-y-full transition-transform duration-300 pb-8 border-t border-gray-200 dark:border-gray-700"><div class="w-full flex justify-center pt-1"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div><div class="p-6"><div class="text-center mb-6"><h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white">Point Name</h3><p id="modal-coords" class="text-xs text-gray-500 font-mono mt-1">--</p></div><button id="btn-modal-app" class="w-full bg-primary text-white font-bold py-3.5 px-4 rounded-xl shadow-md active:scale-[0.98] flex items-center justify-center gap-3 mb-3" data-i18n="btn_app_map_long">Haritada Gör</button><div class="grid grid-cols-2 gap-3"><button onclick="openExternalMap('google')" class="w-full bg-gray-100 dark:bg-[#2C2C2E] dark:text-white font-bold py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2"><span class="text-blue-500 font-black">G</span> Google Maps</button><button onclick="openExternalMap('yandex')" class="w-full bg-gray-100 dark:bg-[#2C2C2E] dark:text-white font-bold py-3.5 px-4 rounded-xl border flex items-center justify-center gap-2"><span class="text-red-500 font-black">Y</span> Yandex Navi</button></div><button onclick="closeNavModal()" class="mt-6 w-full text-center text-sm text-gray-400 p-2" data-i18n="btn_cancel">İptal</button></div></div>
+
+<!-- TAPU KML DIALOG -->
+<div id="tapu-dialog-backdrop" class="fixed inset-0 bg-black/70 z-[1600] hidden backdrop-blur-sm flex items-center justify-center p-6"></div>
+<div id="tapu-dialog" class="fixed z-[1601] bg-[#1C1C1E] rounded-3xl border border-gray-700 shadow-2xl p-6 hidden" style="bottom:auto;top:50%;left:50%;transform:translateY(-50%) translateX(-50%);width:calc(100% - 2rem);max-width:360px">
+    <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-2xl bg-yellow-500/20 flex items-center justify-center shrink-0">
+            <span class="material-icons-round text-yellow-400 text-xl">folder</span>
+        </div>
+        <h3 class="text-base font-bold text-white">Altlık Yükle</h3>
+    </div>
+    <p id="tapu-dialog-desc" class="text-xs text-gray-400 mb-4 leading-relaxed"></p>
+    <input id="tapu-name-input" type="text" class="w-full bg-black/40 border border-gray-600 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:ring-2 focus:ring-yellow-500 text-sm" placeholder="Proje adı giriniz...">
+    <div class="flex gap-3">
+        <button onclick="closeTapuDialog()" class="flex-1 py-3 bg-gray-700 text-white rounded-xl font-bold text-sm">İPTAL</button>
+        <button onclick="confirmTapuLoad()" class="flex-1 py-3 bg-yellow-500 text-black rounded-xl font-bold text-sm">YÜKLE</button>
+    </div>
+</div>
+
+<!-- DOSYA YUKLEME DOM SECICI - genel XML / KML-KMZ / TXT icin, donusturucuden bagimsiz -->
+<div id="file-dom-backdrop" class="fixed inset-0 bg-black/70 z-[1650] hidden backdrop-blur-sm"></div>
+<div id="file-dom-modal" class="fixed bottom-0 left-0 right-0 bg-[#1C1C1E] z-[1651] rounded-t-3xl transform translate-y-full transition-transform duration-300 border-t border-gray-700 max-h-[85vh] overflow-hidden flex flex-col">
+    <div class="w-full flex justify-center pt-3 pb-1 shrink-0"><div class="w-10 h-1 bg-gray-600 rounded-full"></div></div>
+    <div class="px-6 py-4 shrink-0 border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center"><span class="material-icons-round text-primary text-xl">explore</span></div><div><h3 class="text-base font-bold text-white">Dosya Sistem / Dilim Sec</h3><p id="file-dom-file-name" class="text-[10px] text-gray-400 truncate max-w-[220px]"></p></div></div>
+        <button onclick="cancelFileDomImport()" class="text-primary font-bold text-xs">Iptal</button>
+    </div>
+    <div class="overflow-y-auto flex-1 pb-8">
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-primary/80">ITRF96 / TUREF 3 deg (DOM)</p></div>
+        <p class="px-6 pb-3 text-[11px] leading-relaxed text-gray-400">Dosyanin koordinat sistemi kaydedilir; sonraki acilisinda ayni sistem ile haritada gosterilir.</p>
+        <div id="file-dom-options" class="px-4 space-y-2"></div>
+    </div>
+</div>
+
+<!-- ZONE PICKER MODAL -->
+<div id="zone-modal-backdrop" class="fixed inset-0 bg-black/70 z-[1500] hidden backdrop-blur-sm" onclick="closeZoneModal()"></div>
+<div id="zone-modal" class="fixed bottom-0 left-0 right-0 bg-[#1C1C1E] z-[1501] rounded-t-3xl transform translate-y-full transition-transform duration-300 border-t border-gray-700 max-h-[85vh] overflow-hidden flex flex-col">
+    <div class="w-full flex justify-center pt-3 pb-1 shrink-0"><div class="w-10 h-1 bg-gray-600 rounded-full"></div></div>
+    <div class="px-6 py-4 shrink-0 border-b border-gray-800"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center"><span class="material-icons-round text-primary text-xl">explore</span></div><div><h3 class="text-base font-bold text-white">Sistem / Dilim</h3><p class="text-[10px] text-gray-400">Koordinat sisteminizi seçin</p></div></div></div>
+    <div class="overflow-y-auto flex-1 pb-8">
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-primary/80">ITRF96 / TUREF 3 deg (DOM)</p></div>
+        <div id="zone-options-dom" class="px-4 space-y-2"></div>
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-blue-400/80">UTM 6 deg</p></div>
+        <div id="zone-options-utm" class="px-4 space-y-2"></div>
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-purple-400/80">Balkanlar / Makedonya</p></div>
+        <div id="zone-options-mkd" class="px-4 space-y-2"></div>
+    </div>
+</div>
+
+
+<!-- KÜBAJ VIEW - Hesap menüsünden açılan bağımsız LandXML/DEM hacim modülü -->
+<section id="view-cubage" class="view-section p-0" style="height:100vh;overflow:hidden;">
+    <div id="cubage-iframe-wrapper" style="position:absolute;top:0;left:0;right:0;bottom:112px;"></div>
+</section>
+<section id="view-volume" class="view-section p-0" style="height:100vh;overflow:hidden;">
+    <div id="volume-iframe-wrapper" style="position:absolute;top:0;left:0;right:0;bottom:112px;"></div>
+</section>
+
+<!-- YOL VIEW - bağımsız LandXML yol modülü, ilk açılışta lazy-load edilir -->
+<section id="view-road" class="view-section p-0" style="height:100vh;overflow:hidden;">
+    <div id="road-iframe-wrapper" style="position:absolute;top:0;left:0;right:0;bottom:112px;"></div>
+</section>
+
+<!-- SAHA (SITE) VIEW - SahApp iframe olarak gömülü -->
+<section id="view-saha" class="view-section p-0" style="height:100vh;overflow:hidden;">
+    <div id="saha-iframe-wrapper" style="position:absolute;top:0;left:0;right:0;bottom:112px;">
+        <!-- iframe buraya JS ile lazy-load edilecek (ilk açılışta) -->
+    </div>
+</section>
+
+<!-- BOTTOM NAV -->
+<div class="fixed bottom-0 w-full bg-surface-light dark:bg-surface-elevated border-t border-gray-200 dark:border-gray-800 flex justify-around items-center h-28 pb-16 z-50">
+    <button onclick="navigateTo('view-home')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-home"><span class="material-icons-outlined text-gray-400 text-2xl">home</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_home">Anasayfa</span></button>
+    <button onclick="navigateTo('view-map')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-map"><span class="material-icons-outlined text-gray-400 text-2xl">map</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_map">Harita</span></button>
+    <button onclick="navigateTo('view-xml')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-xml"><span class="material-icons-outlined text-gray-400 text-2xl">architecture</span><span class="text-[9px] text-gray-400 font-medium">XML</span></button>
+    <button onclick="navigateTo('view-files')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-files"><span class="material-icons-outlined text-gray-400 text-2xl">folder_open</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_files">Dosyalar</span></button>
+    <button onclick="navigateTo('view-entry')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-entry"><span class="material-icons-outlined text-gray-400 text-2xl">calculate</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_calc">Hesapla</span></button>
+    <button onclick="navigateTo('view-road')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-road"><span class="material-icons-outlined text-gray-400 text-2xl">add_road</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_road">Yol</span></button>
+    <button onclick="navigateTo('view-saha')" class="nav-btn flex-1 min-w-0 flex flex-col items-center p-1" data-target="view-saha"><span class="material-icons-outlined text-gray-400 text-2xl">explore</span><span class="text-[9px] text-gray-400 font-medium" data-i18n="nav_saha">Saha</span></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="assets-obfuscated/inline-2.js"></script>
+
+</body>
+</html>

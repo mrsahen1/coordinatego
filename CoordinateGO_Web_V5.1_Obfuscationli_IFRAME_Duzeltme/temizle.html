@@ -1,0 +1,43 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coordinate GO Cache Temizleme</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #121212; color: #fff; font-family: Arial, sans-serif; }
+    main { width: min(92vw, 520px); padding: 24px; border: 1px solid #333; border-radius: 16px; background: #1f1f22; }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    p { color: #c7c7d1; line-height: 1.5; }
+    button { width: 100%; border: 0; border-radius: 12px; padding: 14px 16px; font-weight: 700; color: #111; background: #f5c542; }
+    #status { margin-top: 16px; font-size: 14px; color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Coordinate GO cache temizleme</h1>
+    <p>Bu sayfa eski service worker ve tarayici cache kayitlarini temizler. Proje dosyalarina dokunmaz.</p>
+    <button id="clean">Temizle</button>
+    <div id="status">Hazir.</div>
+  </main>
+  <script>
+    async function cleanCoordinateGoCache() {
+      const status = document.getElementById('status');
+      status.textContent = 'Temizleniyor...';
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(reg => reg.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+      status.textContent = 'Temizlendi. Simdi ana sayfayi yeniden acip telefonda sayfayi yenileyin.';
+    }
+    document.getElementById('clean').addEventListener('click', cleanCoordinateGoCache);
+    cleanCoordinateGoCache().catch(err => {
+      document.getElementById('status').textContent = 'Hata: ' + err.message;
+    });
+  </script>
+</body>
+</html>

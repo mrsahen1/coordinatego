@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#111111">
+    <title>Coordinate GO · Kazı-Dolgu Hesapla</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="volume.css">
+</head>
+<body>
+<div id="volume-app">
+    <section id="projects-screen" class="screen active">
+        <header class="topbar safe-top">
+            <button id="cubage-home" class="top-action back-action" type="button">‹ Hesap</button>
+            <strong>KAZI-DOLGU PROJELERİ</strong>
+            <button id="new-project" class="top-action gold-action" type="button">＋ Yeni</button>
+        </header>
+        <main class="scroll-body">
+            <article class="hero-card">
+                <div class="hero-icon">▦</div>
+                <div>
+                    <span class="eyebrow">COORDINATE GO · V5.1</span>
+                    <h1>Kazı-Dolgu Projeleri</h1>
+                    <p>LandXML terasman yüzeyini DEM zemin kotlarıyla karşılaştırın.</p>
+                </div>
+            </article>
+            <div class="section-head">
+                <div><span class="eyebrow">KAYITLI PROJELER</span><h2>Bir proje seçin</h2></div>
+                <span id="project-count" class="count-badge">0</span>
+            </div>
+            <div id="project-list" class="project-list"></div>
+            <div id="empty-projects" class="empty-state">
+                <span>▦</span>
+                <strong>Henüz kübaj projesi yok</strong>
+                <small>“Yeni” düğmesine basarak başlayın.</small>
+            </div>
+        </main>
+    </section>
+
+    <section id="file-screen" class="screen">
+        <header class="topbar safe-top">
+            <button id="back-projects" class="top-action back-action" type="button">‹ Projeler</button>
+            <strong id="file-project-title">Proje</strong>
+            <button id="delete-project" class="top-action delete-action" type="button">Sil</button>
+        </header>
+        <main class="scroll-body file-body">
+            <article class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="eyebrow">LANDXML YÜZEYİ</span>
+                        <h1>Proje yüzeyini yükle</h1>
+                    </div>
+                    <span id="file-ready-badge" class="count-badge">0 / 2</span>
+                </div>
+                <label class="upload-card" for="base-file">
+                    <span class="upload-icon">△</span>
+                    <span class="upload-copy">
+                        <strong>Alt Taban (Base Surface)</strong>
+                        <b id="base-file-name">XML dosyası bekleniyor</b>
+                        <small id="base-file-status">Referans LandXML TIN yüzeyini seçin.</small>
+                    </span>
+                    <span class="select-button">Seç</span>
+                </label>
+                <input id="base-file" type="file" accept=".xml,text/xml,application/xml">
+                <label class="upload-card" for="comparison-file">
+                    <span class="upload-icon">△</span>
+                    <span class="upload-copy">
+                        <strong>Üst Taban (Comparison Surface)</strong>
+                        <b id="comparison-file-name">XML dosyası bekleniyor</b>
+                        <small id="comparison-file-status">Son durum LandXML TIN yüzeyini seçin.</small>
+                    </span>
+                    <span class="select-button">Seç</span>
+                </label>
+                <input id="comparison-file" type="file" accept=".xml,text/xml,application/xml">
+            </article>
+
+            <article class="panel">
+                <span class="eyebrow">SİSTEM / DİLİM</span>
+                <button id="dom-button" class="dom-card" type="button">
+                    <span class="dom-icon">⊙</span>
+                    <span><small>Proje koordinat sistemi</small><strong id="dom-label">DOM 30 (Antalya / İstanbul)</strong></span>
+                    <b>⌄</b>
+                </button>
+                <p class="info-line">XML koordinatları DEM sorguları ve telefon GPS’iyle aynı dilime dönüştürülür.</p>
+                <div class="dem-source">
+                    <span class="source-dot"></span>
+                    <div><strong>Alt zemin: Saha DEM kot servisi</strong><small>Open‑Elevation, gerekirse SRTM90m yedeği kullanılır.</small></div>
+                </div>
+                <button id="calculate-button" class="primary-button" type="button" disabled>2 yüzeyi yükleyin</button>
+                <div id="file-progress" class="progress-wrap hidden">
+                    <div class="progress-track"><i id="file-progress-bar"></i></div>
+                    <span id="file-progress-text">Hazırlanıyor…</span>
+                </div>
+            </article>
+
+            <article class="notice-card">
+                <span>?</span>
+                <div>
+                    <strong>DEM tabanlı yaklaşık metraj</strong>
+                    <p>Harita kotları ölçüm cihazı hassasiyetinde değildir. Sonuç, ön değerlendirme amaçlı yaklaşık m³ değeridir.</p>
+                </div>
+            </article>
+        </main>
+    </section>
+
+    <section id="result-screen" class="screen result-screen">
+        <header class="topbar safe-top">
+            <button id="back-file" class="top-action back-action" type="button">‹ Dosyalar</button>
+            <strong id="result-project-title">Kazı-Dolgu</strong>
+            <button id="locate-button" class="top-action gold-action" type="button">Konum</button>
+        </header>
+        <main class="result-main">
+            <div class="result-summary">
+                <div class="result-heading">
+                    <div><span class="gps-line"><i></i><b id="gps-status">GPS bekleniyor</b></span><h1 id="surface-name">Proje Yüzeyi</h1></div>
+                    <span class="approx-badge">DEM · YAKLAŞIK</span>
+                </div>
+                <div class="volume-grid">
+                    <article class="volume-card cut"><span>KAZI</span><strong id="cut-volume">—</strong><small>m³</small></article>
+                    <article class="volume-card fill"><span>DOLGU</span><strong id="fill-volume">—</strong><small>m³</small></article>
+                    <article class="volume-card net"><span>NET</span><strong id="net-volume">—</strong><small>m³</small></article>
+                </div>
+                <div class="metric-row">
+                    <span>Hesap Alanı <b id="plan-area">—</b></span>
+                    <span>Ort. Kazı <b id="average-cut">—</b></span>
+                    <span>Ort. Dolgu <b id="average-fill">—</b></span>
+                </div>
+                <div class="legend-row">
+                    <span><i class="legend cut-color"></i>Kazı: üst taban alt tabanın altında</span>
+                    <span><i class="legend fill-color"></i>Dolgu: üst taban alt tabanın üstünde</span>
+                    <span id="dem-resolution">DEM —</span>
+                </div>
+                <div id="point-readout" class="point-readout">Haritada bir noktaya dokunarak kot farkını görün.</div>
+            </div>
+            <div class="map-wrap">
+                <div id="result-map"></div>
+                <button id="fit-project" type="button">Projeye Sığdır</button>
+            </div>
+        </main>
+    </section>
+
+    <div id="dom-backdrop" class="modal-backdrop hidden"></div>
+    <div id="dom-modal" class="bottom-modal hidden">
+        <div class="modal-grip"></div>
+        <div class="modal-title"><strong>Proje DOM Dilimini Seç</strong><button id="close-dom" type="button">Kapat</button></div>
+        <div id="dom-options" class="dom-options"></div>
+    </div>
+
+    <div id="project-backdrop" class="modal-backdrop hidden"></div>
+    <div id="project-modal" class="project-modal hidden">
+        <span class="eyebrow">YENİ KAZI-DOLGU PROJESİ</span>
+        <h2>Projeye bir isim verin</h2>
+        <input id="project-name" type="text" maxlength="60" placeholder="Örn: OHT3 Kazı-Dolgu">
+        <div class="project-modal-actions">
+            <button id="cancel-project" type="button">İptal</button>
+            <button id="save-project" type="button">Projeyi Oluştur</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="volume-worker.js"></script>
+<script src="volume.js"></script>
+</body>
+</html>

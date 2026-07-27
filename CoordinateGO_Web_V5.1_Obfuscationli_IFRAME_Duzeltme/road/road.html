@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#111111">
+    <title>Coordinate GO · YOL</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="road.css">
+</head>
+<body>
+<div id="road-app">
+    <section id="projects-screen" class="road-screen active">
+        <header class="topbar">
+            <button id="road-home" class="topbar-action back-action" type="button">‹ Anasayfa</button>
+            <strong>YOL PROJELERİ</strong>
+            <button id="new-project" class="topbar-action gold-action" type="button">＋ Yeni</button>
+        </header>
+        <main class="screen-scroll">
+            <div class="welcome-card">
+                <span class="welcome-icon">⌁</span>
+                <div>
+                    <span class="section-label">COORDINATE GO · V5.1</span>
+                    <h1>Yol Projeleri</h1>
+                    <p>Her yol için ayrı proje oluşturun; XML dosyalarını bu açılışta seçin.</p>
+                </div>
+            </div>
+            <div class="list-heading">
+                <div>
+                    <span class="section-label">KAYITLI PROJELER</span>
+                    <h2>Bir proje seçin</h2>
+                </div>
+                <span id="project-count" class="count-badge">0</span>
+            </div>
+            <div id="project-list" class="project-list"></div>
+            <div id="empty-projects" class="empty-state">
+                <span>⌁</span>
+                <strong>Henüz yol projesi yok</strong>
+                <p>Başlamak için “Yeni” düğmesine dokunun.</p>
+                <button id="empty-new-project" class="primary-button compact" type="button">Yeni Proje Ekle</button>
+            </div>
+        </main>
+    </section>
+
+    <section id="project-screen" class="road-screen">
+        <header class="topbar">
+            <button id="project-back" class="topbar-action back-action" type="button">‹ Projeler</button>
+            <strong id="project-title">YOL PROJESİ</strong>
+            <button id="delete-project" class="topbar-action danger-action" type="button">Sil</button>
+        </header>
+        <main class="screen-scroll project-setup">
+            <div class="standard-card">
+                <div class="card-title">
+                    <div>
+                        <span class="section-label">LANDXML DOSYALARI</span>
+                        <h2>Proje dosyalarını yükle</h2>
+                    </div>
+                    <span id="file-count" class="count-badge">0 / 3</span>
+                </div>
+
+                <label class="file-row" data-role="alignment">
+                    <input id="alignment-file" type="file" accept=".xml,text/xml,application/xml">
+                    <span class="file-icon">⌁</span>
+                    <span class="file-copy">
+                        <strong>Güzergâh + Düşey Profil</strong>
+                        <small id="alignment-name">Dosya seçilmedi</small>
+                        <em id="alignment-meta">LandXML güzergâh dosyası</em>
+                    </span>
+                    <span class="file-action">Seç</span>
+                    <span id="alignment-progress" class="file-progress"><i></i></span>
+                </label>
+
+                <label class="file-row" data-role="terrain">
+                    <input id="terrain-file" type="file" accept=".xml,text/xml,application/xml">
+                    <span class="file-icon neutral">△</span>
+                    <span class="file-copy">
+                        <strong>Tabii Zemin</strong>
+                        <small id="terrain-name">Dosya seçilmedi</small>
+                        <em id="terrain-meta">TIN Surface XML dosyası</em>
+                    </span>
+                    <span class="file-action">Seç</span>
+                    <span id="terrain-progress" class="file-progress"><i></i></span>
+                </label>
+
+                <label class="file-row" data-role="design">
+                    <input id="design-file" type="file" accept=".xml,text/xml,application/xml">
+                    <span class="file-icon gold">⌃</span>
+                    <span class="file-copy">
+                        <strong>Terasman</strong>
+                        <small id="design-name">Dosya seçilmedi</small>
+                        <em id="design-meta">Tasarım TIN Surface XML dosyası</em>
+                    </span>
+                    <span class="file-action">Seç</span>
+                    <span id="design-progress" class="file-progress"><i></i></span>
+                </label>
+            </div>
+
+            <div class="standard-card">
+                <span class="section-label">SİSTEM / DİLİM</span>
+                <button id="dom-open" class="selector-button" type="button">
+                    <span class="selector-icon">◉</span>
+                    <span>
+                        <small>Proje koordinat sistemi</small>
+                        <strong id="dom-current">DOM 30 (Antalya / İstanbul)</strong>
+                    </span>
+                    <b>⌄</b>
+                </button>
+                <p class="helper-text">XML koordinatları ve telefon GPS’i aynı DOM diliminde hesaplanır.</p>
+                <div id="project-warning" class="inline-warning hidden"></div>
+                <button id="run-project" class="primary-button" type="button" disabled>3 dosyayı yükleyin</button>
+            </div>
+
+            <div class="info-card">
+                <span class="info-icon">?</span>
+                <div>
+                    <strong>Telefon dosyası bağlantısı</strong>
+                    <p>XML dosyaları uygulamaya kopyalanmaz. Seçtiğiniz telefon dosyalarının güvenli erişim yolu bu YOL projesine kaydedilir; projeyi yeniden açtığınızda aynı üç dosya yeniden okunur. Dosya taşınır veya silinirse yalnız o dosyayı yeniden seçmeniz gerekir.</p>
+                </div>
+            </div>
+        </main>
+    </section>
+
+    <section id="workspace-screen" class="road-screen workspace-screen">
+        <header class="topbar workspace-topbar">
+            <button id="workspace-back" class="topbar-action back-action" type="button">‹ Dosyalar</button>
+            <strong id="workspace-title">YOL</strong>
+            <button id="gps-request" class="topbar-action gold-action" type="button">Konum</button>
+        </header>
+
+        <div class="live-summary">
+            <div class="station-summary">
+                <small id="gps-state"><i></i> GPS bekleniyor</small>
+                <strong id="live-station">—+—</strong>
+                <span id="live-offset">Ofset —</span>
+            </div>
+            <div class="summary-metric cut">
+                <small>PROJE KAZI</small>
+                <strong id="point-cut">—</strong>
+            </div>
+            <div class="summary-metric fill">
+                <small>PROJE DOLGU</small>
+                <strong id="point-fill">—</strong>
+            </div>
+        </div>
+
+        <div class="surface-strip">
+            <span>TZ <b id="terrain-elevation">—</b></span>
+            <span>TR <b id="design-elevation">—</b></span>
+            <span>Profil <b id="profile-elevation">—</b></span>
+            <span>Kesit K/D <b><i id="area-cut">—</i> / <i id="area-fill">—</i></b></span>
+        </div>
+
+        <section class="section-stage">
+            <div class="section-toolbar">
+                <button id="station-minus" type="button">−20 m</button>
+                <div>
+                    <small>2D ENKESİT</small>
+                    <strong id="section-station">—+—</strong>
+                    <span id="section-mode">GPS MODU</span>
+                </div>
+                <button id="station-plus" type="button">+20 m</button>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="section-canvas"></canvas>
+                <div class="chart-legend">
+                    <span class="design-key">Terasman</span>
+                    <span class="terrain-key">Tabii zemin</span>
+                    <span class="gps-key">GPS</span>
+                </div>
+                <div id="section-warning" class="section-warning hidden"></div>
+                <div id="canvas-empty" class="canvas-empty">Kesit hazırlanıyor…</div>
+            </div>
+            <div class="section-footer">
+                <label>Genişlik
+                    <select id="section-width">
+                        <option value="15">±15 m</option>
+                        <option value="25">±25 m</option>
+                        <option value="40">±40 m</option>
+                        <option value="60">±60 m</option>
+                        <option value="100">±100 m</option>
+                        <option value="150">±150 m</option>
+                        <option value="250" selected>±250 m</option>
+                    </select>
+                </label>
+                <strong id="gps-design-delta">GPS → Tasarım —</strong>
+            </div>
+        </section>
+
+        <section class="map-stage">
+            <div class="station-search">
+                <input id="station-input" type="text" inputmode="numeric" placeholder="KM yazın: 124000">
+                <button id="station-go" type="button">KM Git</button>
+                <button id="station-live" type="button">Canlı</button>
+            </div>
+            <div id="road-map"><div class="map-fallback">Harita yükleniyor…</div></div>
+            <div id="target-guidance" class="target-guidance hidden">
+                <strong id="target-station">—+—</strong>
+                <span id="target-direction">Hedef seçildi</span>
+                <span id="target-along">—</span>
+                <span id="target-distance">—</span>
+            </div>
+            <button id="map-fit" class="map-button" type="button">Projeye Sığdır</button>
+        </section>
+    </section>
+
+    <div id="project-dialog" class="sheet-backdrop hidden">
+        <div class="dialog-card">
+            <div class="sheet-handle"></div>
+            <div class="dialog-heading">
+                <div><span class="section-label">YENİ YOL PROJESİ</span><h2>Proje adı</h2></div>
+                <button id="project-dialog-close" type="button">Kapat</button>
+            </div>
+            <input id="project-name-input" type="text" maxlength="60" placeholder="Örn. Antalya–Alanya Ana Yol">
+            <button id="project-create" class="primary-button" type="button">Projeyi Oluştur</button>
+        </div>
+    </div>
+
+    <div id="dom-sheet" class="sheet-backdrop hidden">
+        <div class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div class="dialog-heading">
+                <div><span class="section-label">TÜRKİYE ITRF96 / TUREF</span><h2>Proje DOM Seç</h2></div>
+                <button id="dom-close" type="button">Kapat</button>
+            </div>
+            <div class="dom-options" role="listbox">
+                <button data-crs="DOM27" type="button"><span>EPSG:5253 · TUREF / TM27</span><small>DOM 27 · Batı Türkiye</small><b>✓</b></button>
+                <button data-crs="DOM30" type="button"><span>EPSG:5254 · TUREF / TM30</span><small>DOM 30 · Antalya / İstanbul</small><b>✓</b></button>
+                <button data-crs="DOM33" type="button"><span>EPSG:5255 · TUREF / TM33</span><small>DOM 33 · Orta Anadolu</small><b>✓</b></button>
+                <button data-crs="DOM36" type="button"><span>EPSG:5256 · TUREF / TM36</span><small>DOM 36 · Doğu Akdeniz</small><b>✓</b></button>
+                <button data-crs="DOM39" type="button"><span>EPSG:5257 · TUREF / TM39</span><small>DOM 39 · Doğu Anadolu</small><b>✓</b></button>
+                <button data-crs="DOM42" type="button"><span>EPSG:5258 · TUREF / TM42</span><small>DOM 42 · Doğu Anadolu</small><b>✓</b></button>
+                <button data-crs="DOM45" type="button"><span>EPSG:5259 · TUREF / TM45</span><small>DOM 45 · Doğu sınırı</small><b>✓</b></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="road-toast" role="status"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="landxml-worker.js"></script>
+<script src="road.js"></script>
+</body>
+</html>
