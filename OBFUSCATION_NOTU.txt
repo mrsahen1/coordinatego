@@ -1,0 +1,3 @@
+Bu paket yayın için obfuscation uygulanmış JavaScript içerir.
+Kaynak kodun kamuya açık GitHub deposunda tamamen gizlenmesi teknik olarak mümkün değildir.
+Obfuscation kodu okumayı ve kopyalamayı zorlaştırır; kaynak paketin yedeğini saklayın.

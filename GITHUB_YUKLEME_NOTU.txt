@@ -1,0 +1,21 @@
+Coordinate GO Web / iOS V5.1 paketi
+
+GitHub deposundaki eski dosyaların yerine bu paketin ICERIGINI yukleyin:
+- index.html
+- road klasoru
+- cubage klasoru
+- volume klasoru
+- manifest.json, sw.js ve ikonlar
+
+Yeni ozellik:
+Hesapla > Kazi-Dolgu Hesapla
+Iki LandXML TIN yuzeyi secilir:
+1) Alt Taban (Base Surface): referans yüzey
+2) Ust Taban (Comparison Surface): son durum yüzeyi
+Ortak TIN alaninda ust taban alta inerse KAZI, ustune cikarsa DOLGU m3 hesaplanir.
+
+Onemli:
+- Bu web paketi tarayicida calisir. iOS Safari, Android'in kalici telefon-dosyasi URI iznini sunmaz;
+  sayfa kapatildiginda buyuk XML dosyalari tekrar secilir.
+- GitHub deposu Public ise kaynak kodu goruntulenebilir. Obfuscation yalniz okumayi zorlastirir;
+  gercek kaynak korumasi icin depoyu Private yapin veya kritik algoritmayi sunucuda calistirin.
