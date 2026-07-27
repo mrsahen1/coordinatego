@@ -7,6 +7,12 @@ GitHub deposundaki eski dosyaların yerine bu paketin ICERIGINI yukleyin:
 - volume klasoru
 - manifest.json, sw.js ve ikonlar
 
+Onemli web duzeltmesi:
+- Yol, Kubaj ve Kazi-Dolgu sayfalari web surumunde iframe icinde degil dogrudan acilir.
+  Bu nedenle "baglanmayi reddetti" iframe hatasi olusmaz.
+- Bu duzeltmenin calismasi icin index.html ile road, cubage ve volume klasorlerinin
+  tamamini birlikte yukleyin.
+
 Yeni ozellik:
 Hesapla > Kazi-Dolgu Hesapla
 Iki LandXML TIN yuzeyi secilir:
