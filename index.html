@@ -94,6 +94,14 @@
                     <option value="utm37">Zone 37 (East)</option>
                     <option value="utm38">Zone 38 (Far East)</option>
                     <option value="mkd21">MGI Zone 7 (Bessel - CM 21)</option>
+                    <option value="tz36s">Tanzanya - WGS84 / UTM Zone 36S</option>
+                    <option value="kz39n">Kazakistan - WGS84 / UTM Zone 39N</option>
+                    <option value="kz40n">Kazakistan - WGS84 / UTM Zone 40N</option>
+                    <option value="kz41n">Kazakistan - WGS84 / UTM Zone 41N</option>
+                    <option value="kz42n">Kazakistan - WGS84 / UTM Zone 42N</option>
+                    <option value="kz43n">Kazakistan - WGS84 / UTM Zone 43N</option>
+                    <option value="kz44n">Kazakistan - WGS84 / UTM Zone 44N</option>
+                    <option value="kz45n">Kazakistan - WGS84 / UTM Zone 45N</option>
                 </select>
                 <!-- Modern zone picker button -->
                 <button type="button" id="zone-picker-btn" onclick="openZoneModal()" class="w-full flex items-center justify-between p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 text-sm font-medium active:scale-[0.98] transition-transform">
@@ -151,8 +159,8 @@
                 </button>
                 <input type="hidden" id="epsg-from" value="EPSG:4326">
                 <div class="grid grid-cols-2 gap-3 mt-3">
-                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sağa / Boylam (X)</label><input id="epsg-input-x" type="number" step="any" inputmode="decimal" placeholder="ör. 35.500000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
-                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Yukarı / Enlem (Y)</label><input id="epsg-input-y" type="number" step="any" inputmode="decimal" placeholder="ör. 39.000000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sağa / Boylam (Y)</label><input id="epsg-input-y" type="number" step="any" inputmode="decimal" placeholder="ör. 35.500000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Yukarı / Enlem (X)</label><input id="epsg-input-x" type="number" step="any" inputmode="decimal" placeholder="ör. 39.000000" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm"></div>
                 </div>
             </div>
 
@@ -165,8 +173,8 @@
                 </button>
                 <input type="hidden" id="epsg-to" value="EPSG:5254">
                 <div class="grid grid-cols-2 gap-3 mt-3">
-                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sonuç (X)</label><input id="epsg-output-x" type="text" readonly placeholder="—" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm text-green-500 font-bold"></div>
                     <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sonuç (Y)</label><input id="epsg-output-y" type="text" readonly placeholder="—" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm text-green-500 font-bold"></div>
+                    <div><label class="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Sonuç (X)</label><input id="epsg-output-x" type="text" readonly placeholder="—" class="w-full p-3.5 rounded-xl bg-gray-50 dark:bg-black/30 border-none font-mono text-sm text-green-500 font-bold"></div>
                 </div>
             </div>
 
@@ -176,6 +184,13 @@
             </div>
             <div id="epsg-result-msg" class="hidden text-center text-xs font-bold text-green-500">✓ Dönüşüm başarılı!</div>
         </div>
+
+        <!-- DÜNYA GENELİ KULLANICI TANIMLI KOORDİNAT SİSTEMLERİ -->
+        <button onclick="openCustomCrsManager()" type="button" class="w-full bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-primary/30 mt-6 text-left flex items-center gap-4 active:scale-[0.99]">
+            <span class="w-12 h-12 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><span class="material-icons-round text-2xl">language</span></span>
+            <span class="flex-1 min-w-0"><span class="block text-[10px] font-bold uppercase text-primary tracking-wider">DÜNYA GENELİ · CİHAZDA SAKLANIR</span><strong class="block text-base text-gray-900 dark:text-white mt-1">Özel Koordinat Sistemleri</strong><small class="block text-[11px] text-gray-500 dark:text-gray-400 mt-1">Projeksiyon, elipsoid ve 3/7 parametreli datum dönüşümü oluştur.</small></span>
+            <span class="material-icons-round text-gray-400">chevron_right</span>
+        </button>
 
         <!-- KÜBAJ: Hesap ekranına eklenen tek giriş. Motor ve arayüz assets/cubage altında tamamen bağımsızdır. -->
         <button onclick="navigateTo('view-cubage')" type="button" class="w-full bg-surface-light dark:bg-surface-elevated rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-800 mt-6 text-left flex items-center gap-4 active:scale-[0.99]">
@@ -324,6 +339,12 @@
         <div id="zone-options-utm" class="px-4 space-y-2"></div>
         <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-purple-400/80">Balkanlar / Makedonya</p></div>
         <div id="zone-options-mkd" class="px-4 space-y-2"></div>
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-emerald-400/80">Tanzanya</p></div>
+        <div id="zone-options-tanzania" class="px-4 space-y-2"></div>
+        <div class="px-6 pt-5 pb-2"><p class="text-[10px] font-bold uppercase tracking-widest text-sky-400/80">Kazakistan</p></div>
+        <div id="zone-options-kazakhstan" class="px-4 space-y-2"></div>
+        <div class="px-6 pt-5 pb-2 flex items-center justify-between"><p class="text-[10px] font-bold uppercase tracking-widest text-amber-400/80">BENİM ÖZEL SİSTEMLERİM</p><button type="button" onclick="closeZoneModal();openCustomCrsManager()" class="text-[10px] font-bold text-primary">+ YENİ</button></div>
+        <div id="zone-options-custom" class="px-4 space-y-2"></div>
     </div>
 </div>
 
@@ -361,6 +382,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="custom-crs.js"></script>
+<script src="custom-crs-ui.js"></script>
 
 <script src="assets-obfuscated/inline-2.js"></script>
 
