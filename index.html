@@ -41,6 +41,13 @@
         .direct-distance-label > div { transform: translate(-50%, -50%); background: rgba(13,18,28,.94); color: #fff; border: 1.5px solid #ff5a52; border-radius: 999px; padding: 6px 11px; font-size: 11px; font-weight: 900; letter-spacing: .02em; white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.55); }
         .direct-target-pulse { width: 24px; height: 24px; border: 3px solid #fff; border-radius: 50%; background: #ff4d45; box-shadow: 0 0 0 0 rgba(255,77,69,.7); animation: directTargetPulse 1.7s infinite; }
         @keyframes directTargetPulse { 70% { box-shadow: 0 0 0 14px rgba(255,77,69,0); } 100% { box-shadow: 0 0 0 0 rgba(255,77,69,0); } }
+        .precision-radar { position: relative; width: 220px; height: 220px; border: 1px solid rgba(52,211,153,.5); border-radius: 50%; background: radial-gradient(circle,rgba(16,185,129,.16) 0 2px,transparent 3px), repeating-radial-gradient(circle,transparent 0 35px,rgba(52,211,153,.18) 36px 37px); box-shadow: inset 0 0 45px rgba(16,185,129,.08),0 0 35px rgba(16,185,129,.12); }
+        .precision-radar::before,.precision-radar::after { content:''; position:absolute; background:rgba(52,211,153,.25); }
+        .precision-radar::before { width:1px;height:100%;left:50%;top:0; }
+        .precision-radar::after { height:1px;width:100%;top:50%;left:0; }
+        .precision-arrow { position:absolute; inset:20px; display:flex; align-items:flex-start; justify-content:center; transform-origin:center; transition:transform .25s linear; }
+        .precision-arrow span { color:#ff5a52; font-size:54px; filter:drop-shadow(0 0 10px rgba(255,90,82,.8)); }
+        .precision-center { position:absolute; left:50%; top:50%; width:18px; height:18px; transform:translate(-50%,-50%); border:3px solid white; border-radius:50%; background:#4285f4; box-shadow:0 0 0 8px rgba(66,133,244,.18),0 0 18px #4285f4; z-index:2; }
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-display antialiased overflow-hidden">
@@ -55,7 +62,7 @@
     <div class="px-5 max-w-md mx-auto">
         <header class="flex items-center justify-center gap-4 mb-10 mt-20">
             <div class="w-16 h-16 bg-surface-elevated rounded-full flex items-center justify-center shadow-lg border border-gray-700"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(45deg);"><path d="M12 2L19 21L12 17L5 21L12 2Z" fill="#9C7C3F" stroke="#9C7C3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-            <div><h1 class="text-3xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">Coordinate <span class="text-primary">GO</span></h1><p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Created By Sahin V5.1.1</p></div>
+            <div><h1 class="text-3xl font-black tracking-tighter text-gray-900 dark:text-white leading-none">Coordinate <span class="text-primary">GO</span></h1><p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Created By Sahin V5.1.2</p></div>
         </header>
         <div class="space-y-4">
             <button onclick="navigateTo('view-entry')" class="w-full bg-surface-light dark:bg-surface-elevated p-6 rounded-2xl shadow-sm text-left flex items-center gap-4 active:scale-[0.98] border border-gray-100 dark:border-gray-800 group"><div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0"><span class="material-icons-round text-2xl">calculate</span></div><div><h3 class="font-bold text-lg" data-i18n="home_converter_title">Koordinat Çevirici</h3><p class="text-xs text-gray-500 mt-1" data-i18n="home_converter_desc">ITRF (DOM) & UTM'den WGS84'e</p></div><span class="material-icons-round text-gray-300 ml-auto">chevron_right</span></button>
@@ -277,6 +284,31 @@
     </div>
     <div id="map" class="bg-[#121212]"></div>
 </section>
+
+<!-- 5 METRE HASSAS APLİKASYON MODU -->
+<div id="precision-mode" class="fixed inset-0 z-[1800] hidden overflow-y-auto bg-[#071019]/95 px-5 py-7 text-white backdrop-blur-xl">
+    <div class="mx-auto flex min-h-full max-w-sm flex-col items-center">
+        <div class="flex w-full items-center justify-between">
+            <div><div class="text-[10px] font-black uppercase tracking-[.22em] text-emerald-400">Hassas aplikasyon</div><div id="precision-target-name" class="mt-1 max-w-[230px] truncate text-sm font-bold text-gray-300">Hedef</div></div>
+            <button onclick="closePrecisionMode(true)" class="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5"><span class="material-icons-round">close</span></button>
+        </div>
+        <div class="mt-5 text-center"><div class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Hedefe kalan</div><div id="precision-distance" class="mt-1 font-mono text-6xl font-black tracking-tight text-white">—</div></div>
+        <div class="precision-radar mt-5">
+            <div id="precision-arrow" class="precision-arrow"><span class="material-icons-round">navigation</span></div>
+            <div class="precision-center"></div>
+            <div class="absolute left-1/2 top-2 -translate-x-1/2 text-[9px] font-black text-emerald-300">K</div>
+        </div>
+        <div id="precision-direction" class="mt-4 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-5 py-2 text-sm font-black text-emerald-300">Yön hesaplanıyor…</div>
+        <div class="mt-5 grid w-full grid-cols-2 gap-3">
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-center"><div class="text-[9px] font-bold uppercase text-gray-500">Hedef azimutu</div><div id="precision-bearing" class="mt-1 font-mono text-xl font-black">—</div></div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-center"><div class="text-[9px] font-bold uppercase text-gray-500">GPS hassasiyeti</div><div id="precision-accuracy" class="mt-1 font-mono text-xl font-black">—</div></div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-center"><div class="text-[9px] font-bold uppercase text-gray-500">Kuzey / Güney</div><div id="precision-north" class="mt-1 text-sm font-black">—</div></div>
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-center"><div class="text-[9px] font-bold uppercase text-gray-500">Doğu / Batı</div><div id="precision-east" class="mt-1 text-sm font-black">—</div></div>
+        </div>
+        <div id="precision-warning" class="mt-4 w-full rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-center text-[10px] font-semibold leading-relaxed text-amber-300">Telefon GPS hassasiyeti gerçek aplikasyon doğruluğunu sınırlar.</div>
+        <div class="mt-auto grid w-full grid-cols-2 gap-3 pt-5"><button onclick="closePrecisionMode(true)" class="rounded-xl bg-white/10 px-3 py-3.5 text-xs font-bold">Haritaya Dön</button><button onclick="stopDirectDistance()" class="rounded-xl bg-emerald-500 px-3 py-3.5 text-xs font-black text-[#071019]">Takibi Bitir</button></div>
+    </div>
+</div>
 
 <!-- MODALS -->
 <div id="custom-alert-backdrop" class="fixed inset-0 bg-black/80 z-[2000] hidden flex items-center justify-center p-6 backdrop-blur-sm">
